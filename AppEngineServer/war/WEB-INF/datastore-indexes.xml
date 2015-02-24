@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<datastore-indexes autoGenerate="false">
+    <datastore-index kind="Fuel" ancestor="true" source="manual">
+        <property name="odo" direction="desc"/>
+    </datastore-index>
+    
+    <datastore-index kind="GpsLog" ancestor="false" source="manual">
+        <property name="time_key" direction="asc"/>
+        <property name="timestamp" direction="asc"/>
+    </datastore-index>
+    
+    <datastore-index kind="GpsLog" ancestor="false" source="manual">
+        <property name="vin" direction="asc"/>
+        <property name="time_key" direction="asc"/>
+        <property name="timestamp" direction="asc"/>
+    </datastore-index>
+    
+    <datastore-index kind="Maintenance" ancestor="true" source="manual">
+        <property name="garage" direction="asc"/>
+    </datastore-index>
+    
+    <datastore-index kind="Maintenance" ancestor="true" source="manual">
+        <property name="odo" direction="desc"/>
+    </datastore-index>
+    
+    <datastore-index kind="TrackLog" ancestor="true" source="manual">
+    	<property name="timestamp" direction="asc" />
+    </datastore-index>
+    
+    <datastore-index kind="TrackLogData" ancestor="true" source="manual">
+    	<property name="timestamp" direction="asc" />
+    </datastore-index>
+    
+    
+</datastore-indexes>

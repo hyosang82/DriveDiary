@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns="http://java.sun.com/xml/ns/javaee"
+xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
+	<servlet>
+		<servlet-name>CarDiary</servlet-name>
+		<servlet-class>kr.hyosang.cardiary.server.CarDiaryServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>CarDiary</servlet-name>
+		<url-pattern>/cardiary</url-pattern>
+	</servlet-mapping>
+    
+    
+    
+    <servlet>
+        <servlet-name>PageGenerator</servlet-name>
+        <servlet-class>kr.hyosang.cardiary.server.PageGenerator</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>VehicleProcessor</servlet-name>
+        <servlet-class>kr.hyosang.cardiary.server.processor.VehicleProcessor</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>FuelProcessor</servlet-name>
+        <servlet-class>kr.hyosang.cardiary.server.processor.FuelProcessor</servlet-class>
+    </servlet>
+    <servlet>
+    	<servlet-name>LogProcessor</servlet-name>
+    	<servlet-class>kr.hyosang.cardiary.server.processor.LogProcessor</servlet-class>
+    </servlet>
+    <servlet>
+    	<servlet-name>MaintainProcessor</servlet-name>
+    	<servlet-class>kr.hyosang.cardiary.server.processor.MaintainProcessor</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>PageGenerator</servlet-name>
+        <url-pattern>/page_generator</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>VehicleProcessor</servlet-name>
+        <url-pattern>/SaveVehicle</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>FuelProcessor</servlet-name>
+        <url-pattern>/SaveStation</url-pattern>
+        <url-pattern>/SaveFuelLog</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+    	<servlet-name>LogProcessor</servlet-name>
+    	<url-pattern>/UploadLog</url-pattern>
+    	<url-pattern>/LogUpdate</url-pattern>
+    	<url-pattern>/MergeLog</url-pattern>
+    	<url-pattern>/DeleteLog</url-pattern>
+    	<url-pattern>/GetTag</url-pattern>
+    	<url-pattern>/AddTag</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+    	<servlet-name>MaintainProcessor</servlet-name>
+    	<url-pattern>/AddPartsItem</url-pattern>
+    	<url-pattern>/GetPartsList</url-pattern>
+    	<url-pattern>/SaveMaintenance</url-pattern>
+    </servlet-mapping>
+    
+	<welcome-file-list>
+		<welcome-file>index.jsp</welcome-file>
+	</welcome-file-list>
+</web-app>
