@@ -1,9 +1,9 @@
-package kr.hyosang.incarapp.network;
+package kr.hyosang.drivediary.android.network;
 
-import kr.hyosang.incarapp.BaseUtil;
-import kr.hyosang.incarapp.Definition;
-import kr.hyosang.incarapp.database.DbHelper;
-import kr.hyosang.incarapp.database.LogDataSet;
+import kr.hyosang.drivediary.android.BaseUtil;
+import kr.hyosang.drivediary.android.Definition;
+import kr.hyosang.drivediary.android.database.DbHelper;
+import kr.hyosang.drivediary.android.database.LogDataSet;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;

@@ -1,4 +1,4 @@
-package kr.hyosang.incarapp;
+package kr.hyosang.drivediary.android;
 
 import android.content.Context;
 import android.content.SharedPreferences;

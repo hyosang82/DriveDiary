@@ -1,4 +1,4 @@
-package kr.hyosang.incarapp.database;
+package kr.hyosang.drivediary.android.database;
 
 import java.util.ArrayList;
 import java.util.List;

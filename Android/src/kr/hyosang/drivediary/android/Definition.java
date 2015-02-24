@@ -1,4 +1,4 @@
-package kr.hyosang.incarapp;
+package kr.hyosang.drivediary.android;
 
 public class Definition {
 	public static class Event {

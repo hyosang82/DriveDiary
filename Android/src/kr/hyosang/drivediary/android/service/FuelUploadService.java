@@ -1,12 +1,12 @@
-package kr.hyosang.incarapp.service;
+package kr.hyosang.drivediary.android.service;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 
-import kr.hyosang.incarapp.Definition;
-import kr.hyosang.incarapp.SettingActivity;
-import kr.hyosang.incarapp.network.NetworkManager;
+import kr.hyosang.drivediary.android.Definition;
+import kr.hyosang.drivediary.android.SettingActivity;
+import kr.hyosang.drivediary.android.network.NetworkManager;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;

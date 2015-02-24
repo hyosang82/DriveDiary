@@ -1,10 +1,10 @@
-package kr.hyosang.incarapp;
+package kr.hyosang.drivediary.android;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import kr.hyosang.incarapp.service.GpsService;
-import kr.hyosang.incarapp.service.IGpsService;
+import kr.hyosang.drivediary.android.service.GpsService;
+import kr.hyosang.drivediary.android.service.IGpsService;
 import net.daum.mf.map.api.CameraUpdateFactory;
 import net.daum.mf.map.api.MapPoint;
 import net.daum.mf.map.api.MapPolyline;

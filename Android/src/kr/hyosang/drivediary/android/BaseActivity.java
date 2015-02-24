@@ -1,4 +1,4 @@
-package kr.hyosang.incarapp;
+package kr.hyosang.drivediary.android;
 
 import android.app.Activity;
 import android.util.Log;

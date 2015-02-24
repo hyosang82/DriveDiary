@@ -1,11 +1,11 @@
-package kr.hyosang.incarapp.database;
+package kr.hyosang.drivediary.android.database;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
-import kr.hyosang.incarapp.BaseUtil;
+import kr.hyosang.drivediary.android.BaseUtil;
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;

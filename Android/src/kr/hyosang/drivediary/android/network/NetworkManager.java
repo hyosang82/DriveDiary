@@ -1,4 +1,4 @@
-package kr.hyosang.incarapp.network;
+package kr.hyosang.drivediary.android.network;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -10,10 +10,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import kr.hyosang.incarapp.BaseUtil;
-import kr.hyosang.incarapp.Definition;
-import kr.hyosang.incarapp.SettingActivity;
-import kr.hyosang.incarapp.database.LogDataSet;
+import kr.hyosang.drivediary.android.BaseUtil;
+import kr.hyosang.drivediary.android.Definition;
+import kr.hyosang.drivediary.android.SettingActivity;
+import kr.hyosang.drivediary.android.database.LogDataSet;
 import android.util.Log;
 
 public class NetworkManager implements BaseUtil {

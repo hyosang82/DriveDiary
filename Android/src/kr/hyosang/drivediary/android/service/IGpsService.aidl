@@ -1,4 +1,4 @@
-package kr.hyosang.incarapp.service;
+package kr.hyosang.drivediary.android.service;
 
 interface IGpsService {
     void startLog();

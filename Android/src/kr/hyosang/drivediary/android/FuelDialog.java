@@ -1,6 +1,6 @@
-package kr.hyosang.incarapp;
+package kr.hyosang.drivediary.android;
 
-import kr.hyosang.incarapp.service.FuelUploadService;
+import kr.hyosang.drivediary.android.service.FuelUploadService;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;

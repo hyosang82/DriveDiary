@@ -1,11 +1,11 @@
-package kr.hyosang.incarapp.service;
+package kr.hyosang.drivediary.android.service;
 
-import kr.hyosang.incarapp.BaseUtil;
-import kr.hyosang.incarapp.Definition;
-import kr.hyosang.incarapp.R;
-import kr.hyosang.incarapp.SettingActivity;
-import kr.hyosang.incarapp.database.DbHelper;
-import kr.hyosang.incarapp.network.UploadThread;
+import kr.hyosang.drivediary.android.BaseUtil;
+import kr.hyosang.drivediary.android.Definition;
+import kr.hyosang.drivediary.android.R;
+import kr.hyosang.drivediary.android.SettingActivity;
+import kr.hyosang.drivediary.android.database.DbHelper;
+import kr.hyosang.drivediary.android.network.UploadThread;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.Service;
