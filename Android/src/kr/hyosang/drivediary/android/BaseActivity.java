@@ -5,7 +5,7 @@ import android.util.Log;
 
 public abstract class BaseActivity extends Activity implements BaseUtil {
 	public void log(String log) {
-		Log.d("InCarApp", String.format("[%s] %s", getTag(), log));
+		Log.d("DriveDiary", String.format("[%s] %s", getTag(), log));
 	}
 
 }

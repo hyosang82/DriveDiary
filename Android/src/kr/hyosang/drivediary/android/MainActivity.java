@@ -3,18 +3,24 @@ package kr.hyosang.drivediary.android;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import kr.hyosang.drivediary.android.network.UploadThread2;
 import kr.hyosang.drivediary.android.service.GpsService;
 import kr.hyosang.drivediary.android.service.IGpsService;
 import net.daum.mf.map.api.CameraUpdateFactory;
 import net.daum.mf.map.api.MapPoint;
 import net.daum.mf.map.api.MapPolyline;
 import net.daum.mf.map.api.MapView;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.location.Location;
+import android.net.NetworkInfo;
+import android.net.NetworkInfo.State;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -167,10 +173,20 @@ public class MainActivity extends BaseActivity {
 		mTrackline.setLineColor(Color.argb(0xff, 0xee, 0x00, 0x00));
 		mMapView.addPolyline(mTrackline);
 		
+		mMapView.moveCamera(CameraUpdateFactory.newMapPoint(MapPoint.mapPointWithGeoCoord(38.22354, 127.40204)));
+		
 		Intent i = new Intent();
 		i.setClass(MainActivity.this, GpsService.class);
 		
-		bindService(i, mServiceConn, Context.BIND_AUTO_CREATE);
+		boolean res = getApplicationContext().bindService(i, mServiceConn, Context.BIND_AUTO_CREATE);
+		
+		
+		//wifi listener
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
+		registerReceiver(mReceiver, filter);
+		
+		log("App started");
 	}
 	
 	private void initMap() {
@@ -210,7 +226,15 @@ public class MainActivity extends BaseActivity {
 	
 	@Override
 	protected void onDestroy() {
-		unbindService(mServiceConn);
+	    try {
+	        unregisterReceiver(mReceiver);
+	    }catch(IllegalArgumentException e) {
+	    }
+	    
+	    try {
+	        unbindService(mServiceConn);
+	    }catch(IllegalArgumentException e) {
+	    }
 		
 		if(!isLogging()) {
 			Intent i = new Intent(MainActivity.this, GpsService.class);
@@ -282,6 +306,10 @@ public class MainActivity extends BaseActivity {
 
 				mTrackline.addPoint(MapPoint.mapPointWithGeoCoord(loc.getLatitude(), loc.getLongitude()));
 				
+				if(bTrackingMap) {
+                    mMapView.moveCamera(CameraUpdateFactory.newMapPoint(MapPoint.mapPointWithGeoCoord(loc.getLatitude(), loc.getLongitude())));
+                }
+				
 				displayInfo(loc);
 				
 			}else if(msg.arg1 == Definition.Event.LOG_STATE_CHANGED) {
@@ -337,6 +365,22 @@ public class MainActivity extends BaseActivity {
 		}
 		return super.onMenuItemSelected(featureId, item);
 	}
+	
+	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(WifiManager.NETWORK_STATE_CHANGED_ACTION.equals(intent.getAction())) {
+                NetworkInfo netInfo = (NetworkInfo) intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+                
+                log("Network state = " + netInfo.getState());
+                
+                if(netInfo.getState() == State.CONNECTED) {
+                    //업로드 스레드 실행
+                    (new UploadThread2(MainActivity.this)).start();
+                }
+            }
+        }
+	};
 	
 
 }

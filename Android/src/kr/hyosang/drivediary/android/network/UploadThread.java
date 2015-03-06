@@ -13,6 +13,7 @@ import android.widget.Toast;
 public class UploadThread extends Thread implements BaseUtil {
 	private Context mContext = null;
 	private static Object mLock = null;
+	private static boolean mbRunning = false;
 	private Handler mHandler = null;
 	
 	public UploadThread(Context context) {
@@ -29,6 +30,10 @@ public class UploadThread extends Thread implements BaseUtil {
 	
 	@Override
 	public void run() {
+	    if(mbRunning) return;
+	    
+	    mbRunning = true;
+	    
 		synchronized(mLock) {
 			DbHelper mDb = new DbHelper(mContext);
 			LogDataSet dataset = mDb.getUploadData();
@@ -64,6 +69,8 @@ public class UploadThread extends Thread implements BaseUtil {
 				showToast("업로드할 데이터 없음");
 			}
 		}
+		
+		mbRunning = false;
 	}
 	
 	public void showToast(final String msg) {

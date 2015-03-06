@@ -71,11 +71,88 @@ public class DbHelper extends SQLiteOpenHelper implements BaseUtil {
 		.append(" timestamp NUMERIC ")
 		.append(" ) ");
 		db.execSQL(sb.toString());
+		
+		sb = new StringBuffer();
+		sb.append("CREATE TABLE IF NOT EXISTS fuellog ")
+		.append(" ( ")
+		.append(" seq INTEGER PRIMARY KEY AUTOINCREMENT, ")
+		.append(" location TEXT, ")
+		.append(" odo INTEGER, ")
+		.append(" price_unit INTEGER, ")
+		.append(" price_total INTEGER, ")
+		.append(" liter REAL(3,2), ")
+		.append(" is_full CHAR(1) DEFAULT 'N', ")
+		.append(" timestamp NUMERIC ")
+		.append(" ) ");
+		db.execSQL(sb.toString());
+		
+		
 	}
 
 	@Override
 	public void onUpgrade(SQLiteDatabase arg0, int arg1, int arg2) {
 
+	}
+	
+	public FuelRecord getUploadFuelRecord() {
+	    SQLiteDatabase db = getReadableDatabase();
+	    Cursor c = db.query("fuellog",
+	            new String[]{"seq", "location", "odo", "price_unit", "price_total", "liter", "is_full", "timestamp"},
+	            null, null,
+	            null, null,
+	            "seq ASC"
+	           );
+	    
+	    FuelRecord record = null;
+	    
+	    if(c.getCount() > 0) {
+	        c.moveToNext();
+	        
+	        record = new FuelRecord();
+	        record.seq = c.getInt(c.getColumnIndex("seq"));
+	        record.location = c.getString(c.getColumnIndex("location"));
+	        record.odo = c.getInt(c.getColumnIndex("odo"));
+	        record.priceUnit = c.getInt(c.getColumnIndex("price_unit"));
+	        record.priceTotal = c.getInt(c.getColumnIndex("price_total"));
+	        record.liter = c.getDouble(c.getColumnIndex("liter"));
+	        record.isFull = "Y".equals(c.getString(c.getColumnIndex("is_full")));
+	        record.timestamp = c.getLong(c.getColumnIndex("timestamp"));
+	    }else {
+	    }
+	    
+	    c.close();
+	    
+	    db.releaseReference();
+	    
+	    return record;
+	}
+	
+	public void removeFuelRecord(int seq) {
+	    SQLiteDatabase db = getWritableDatabase();
+	    db.execSQL("DELETE FROM fuellog WHERE seq = " + seq);
+	    db.releaseReference();
+	}
+	
+	
+	public long addFuelRecord(String location, int odo, int price_unit, int price_total, double liter, boolean isFull) {
+        ContentValues cols = new ContentValues();
+        cols.put("location", location);
+        cols.put("odo", odo);
+        cols.put("price_unit", price_unit);
+        cols.put("price_total", price_total);
+        cols.put("liter", liter);
+        cols.put("is_full", isFull ? "Y" : "N");
+        cols.put("timestamp", System.currentTimeMillis());
+        
+	    synchronized(mLock) {
+	        SQLiteDatabase db = getWritableDatabase();
+	        
+	        long res = db.insert("fuellog", null, cols);
+	        
+	        db.releaseReference();
+	        
+	        return res;
+	    }
 	}
 	
 	public long insertNewTrack(String title, long timestamp) {

@@ -20,7 +20,7 @@ public class Definition {
 	public static final String UPLOAD_FUEL = "/SaveFuelLog";
 	
 	public static String getServerHost() {
-		return (IS_LOCAL ? SERVER_ROOT_LOCAL : SERVER_ROOT_REAL);
+		return (IS_LOCAL ? SERVER_ROOT_REAL : SERVER_ROOT_REAL);
 	}
 
 }

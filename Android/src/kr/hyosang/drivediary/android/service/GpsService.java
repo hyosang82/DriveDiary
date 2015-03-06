@@ -2,18 +2,22 @@ package kr.hyosang.drivediary.android.service;
 
 import kr.hyosang.drivediary.android.BaseUtil;
 import kr.hyosang.drivediary.android.Definition;
+import kr.hyosang.drivediary.android.MainActivity;
 import kr.hyosang.drivediary.android.R;
 import kr.hyosang.drivediary.android.SettingActivity;
 import kr.hyosang.drivediary.android.database.DbHelper;
 import kr.hyosang.drivediary.android.network.UploadThread;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.Location;
+import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
@@ -30,7 +34,10 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 
 public class GpsService extends Service implements BaseUtil {
+    
+    @Deprecated
 	private LocationClient mLocationClient;
+    private LocationManager mLocationManager;
 	private Messenger mViewListener;
 	private boolean mIsLogging = false;
 	private DbHelper mDb = null;
@@ -84,6 +91,8 @@ public class GpsService extends Service implements BaseUtil {
 		mNotiManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		
 		updateNotification(NotificationType.SERVICE_STARTED);
+		
+		log("Service started");
 	}
 	
 	@Override
@@ -99,11 +108,15 @@ public class GpsService extends Service implements BaseUtil {
 		}
 		
 		//초기화가 되어있는 경우 재 생성 하지 않음.
-		if(mLocationClient == null) {
-			mLocationClient = new LocationClient(this, mLocationCallback, mLocationFailed);
-			mLocationClient.connect();
-			
-			updateNotification(NotificationType.GPS_SEARCHING);
+		if(mLocationManager == null) {
+		    mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		    
+		    mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+		            (long) SettingActivity.sIntervalTime,
+		            (float) SettingActivity.sIntervalDist,
+		            mLocationListener2);
+		    
+		    updateNotification(NotificationType.GPS_SEARCHING);
 		}
 		
 		if(mDb == null) {
@@ -119,10 +132,8 @@ public class GpsService extends Service implements BaseUtil {
 		
 		unregisterReceiver(mTickListener);
 		
-		if(mLocationClient != null && mLocationClient.isConnected()) {
-			mLocationClient.removeLocationUpdates(mLocationListener);
-			mLocationClient.disconnect();
-			mLocationClient = null;
+		if(mLocationManager != null) {
+		    mLocationManager.removeUpdates(mLocationListener2);
 		}
 		
 		mNotiManager.cancelAll();
@@ -236,6 +247,10 @@ public class GpsService extends Service implements BaseUtil {
 	}
 	
 	private void updateNotification(NotificationType type) {
+	    updateNotification(type, null);
+	}
+	
+	private void updateNotification(NotificationType type, String customContent) {
 	    int icon = R.drawable.ic_launcher;
 	    String title = "DriveDiary Service";
 	    String content = "...";
@@ -261,15 +276,102 @@ public class GpsService extends Service implements BaseUtil {
 	        content = "Uploading data...";
 	        break;
 	    }
+	    
+	    if(customContent != null) {
+	        content = customContent;
+	    }
+	        
+	    PendingIntent intent = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), 0);
 	     
 	    Notification noti = (new Notification.Builder(this))
                 .setSmallIcon(icon)
                 .setContentTitle(title)
                 .setContentText(content)
+                .setContentIntent(intent)
                 .getNotification();
         mNotiManager.notify(1, noti);
 	}
 	
+	private android.location.LocationListener mLocationListener2 = new android.location.LocationListener() {
+        @Override
+        public void onLocationChanged(Location location) {
+            float speedKm = location.getSpeed() * 3.6f;
+            
+            if(mIsLogging) {
+                if(location.getAccuracy() < SettingActivity.sValidAccuracy) {
+                    if(location.hasBearing()) {
+                        //방향정보 갖고있나?
+                        if(location.hasSpeed()) {
+                            //속도정보 있나?
+                            if((System.currentTimeMillis() - mLastLoggedTime) > (SettingActivity.sIntervalTime * 1000)) {
+                                //로깅 인터벌 시간 경과했나?
+                                insertLog(location);
+                                bZeroLogged = false;
+                            }
+                        }
+                    }
+                
+                    if(!bZeroLogged && location.getSpeed() == 0) {
+                        //속도0 기록되었나?
+                        insertLog(location);
+                        bZeroLogged = true;
+                    }
+                    
+                    //gps로그가 튀는 현상이 있음. 5km/h이상일 경우에만 지속시킴.
+                    if(speedKm > 5) {
+                        mStopTickTimer = 30;
+                    }
+                }
+            }else {
+                //기록 개시 속도에 도달했는지 확인
+                if(speedKm > SettingActivity.sTriggerSpeed) {
+                    //기록 개시
+                    startLog();
+                    insertLog(location);
+                }
+            }
+            
+            mLastLocation = location;
+            sendMessage(Definition.Event.LOCATION_UPDATED, location);            
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+            String st = "GPS Status changed : ";
+            
+            switch(status) {
+            case LocationProvider.OUT_OF_SERVICE:
+                st += "OUT OF SERVICE";
+                break;
+                
+            case LocationProvider.TEMPORARILY_UNAVAILABLE:
+                st += "TEMPORARILY_UNAVAILABLE";
+                break;
+                
+            case LocationProvider.AVAILABLE:
+                st += "AVAILABLE";
+                break;
+            }
+            
+            
+            updateNotification(NotificationType.GPS_RECEIVED, st);
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+            // TODO Auto-generated method stub
+            
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+            // TODO Auto-generated method stub
+            
+        }
+	};
+	
+	
+	@Deprecated
 	private LocationListener mLocationListener = new LocationListener() {
 		@Override
 		public void onLocationChanged(Location loc) {

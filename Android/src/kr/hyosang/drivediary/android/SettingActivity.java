@@ -25,7 +25,7 @@ public class SettingActivity extends PreferenceActivity implements BaseUtil {
 	public static int sIntervalDist = 0;
 	public static int sTriggerSpeed = 20;
 	public static float sValidAccuracy = 100.0f;
-	public static String sVin = "";
+	public static String sVin = "TESTVIN";
 	public static int sIntervalUpload = 30;
 	
 	@SuppressWarnings("deprecation")

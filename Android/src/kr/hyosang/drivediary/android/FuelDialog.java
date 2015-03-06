@@ -1,9 +1,10 @@
 package kr.hyosang.drivediary.android;
 
-import kr.hyosang.drivediary.android.service.FuelUploadService;
+import kr.hyosang.drivediary.android.database.DbHelper;
+import kr.hyosang.drivediary.android.network.UploadThread2;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.Intent;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -17,6 +18,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
+import android.widget.Toast;
 
 
 public class FuelDialog extends Dialog {
@@ -79,6 +81,7 @@ public class FuelDialog extends Dialog {
 		public void onClick(View v) {
 			if(v.getId() == mBtnConfirm.getId()) {
 				//confirm
+			    /*
 				Intent i = new Intent(mContext, FuelUploadService.class);
 				i.putExtra(FuelUploadService.EXTRA_ISFULL, mChkFull.isChecked() ? "Y" : "N");
 				i.putExtra(FuelUploadService.EXTRA_LITER, mTxtLiter.getText().toString());
@@ -88,7 +91,26 @@ public class FuelDialog extends Dialog {
 				i.putExtra(FuelUploadService.EXTRA_UNIT_PRICE, mTxtUnitPrice.getText().toString());
 				
 				mContext.startService(i);
-				
+				*/
+			    
+			    DbHelper db = new DbHelper(mContext);
+			    
+			    long res = db.addFuelRecord(mPosStr,
+			            Util.parseInt(mTxtOdo.getText().toString(), -1),
+			            Util.parseInt(mTxtUnitPrice.getText().toString(), -1),
+			            Util.parseInt(mTxtTotalPrice.getText().toString(), -1),
+			            Util.parseDouble(mTxtLiter.getText().toString(), -1),
+			            mChkFull.isChecked()
+			            );
+			    
+			    Toast.makeText(mContext, "Fuel record insert = " + res, Toast.LENGTH_SHORT).show();
+			    
+			    WifiManager wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
+			    if(wifiManager.getConnectionInfo().getIpAddress() != 0) {
+			        //업로드 스레드 시작
+			        (new UploadThread2(mContext)).start();
+			    }
+			    
 				dismiss();
 			}else if(v.getId() == mBtnCancel.getId()) {
 				dismiss();
