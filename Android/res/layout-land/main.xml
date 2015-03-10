@@ -254,12 +254,12 @@
                 android:text="@string/stop_log"
             />
             <Button
-                android:id="@+id/btn_stopanduploadlog"
+                android:id="@+id/btn_stopservice"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:textColor="#aa0000"
-                android:text="@string/stop_upload_log"
+                android:text="@string/stop_service"
             />
         </LinearLayout>
 

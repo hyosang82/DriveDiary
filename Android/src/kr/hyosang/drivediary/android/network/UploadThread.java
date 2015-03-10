@@ -1,97 +1,114 @@
 package kr.hyosang.drivediary.android.network;
 
-import kr.hyosang.drivediary.android.BaseUtil;
+import java.text.SimpleDateFormat;
+import java.util.HashMap;
+
 import kr.hyosang.drivediary.android.Definition;
+import kr.hyosang.drivediary.android.SettingActivity;
 import kr.hyosang.drivediary.android.database.DbHelper;
+import kr.hyosang.drivediary.android.database.FuelRecord;
 import kr.hyosang.drivediary.android.database.LogDataSet;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
+import android.os.Message;
 import android.widget.Toast;
 
-public class UploadThread extends Thread implements BaseUtil {
-	private Context mContext = null;
-	private static Object mLock = null;
-	private static boolean mbRunning = false;
-	private Handler mHandler = null;
-	
-	public UploadThread(Context context) {
-		mContext = context;
-		if(mLock == null) {
-			mLock = new Object();
-		}
-	}
-	
-	public UploadThread setLooper(Looper looper) {
-		mHandler = new Handler(looper);
-		return this;
-	}
-	
-	@Override
-	public void run() {
-	    if(mbRunning) return;
-	    
-	    mbRunning = true;
-	    
-		synchronized(mLock) {
-			DbHelper mDb = new DbHelper(mContext);
-			LogDataSet dataset = mDb.getUploadData();
-			if(dataset != null && dataset.getCount() > 0) {
-				log("Data : " + dataset.logData);
-				log("TimeKey : " + dataset.timeKey);
-				log("seq : " + dataset.keyList);
-				
-				showToast(String.format("업로드 시작 : %d건", dataset.getCount()));
-				
-				NetworkManager net = NetworkManager.getInstance();
-				int res = net.uploadLog(dataset);
-				
-				log("Response : " + res);
-				showToast("업로드 : " + res + ", 내부 데이터 삭제");
-				
-				if(res == 200) {
-					//OK
-					int cnt = 0;
-					if(!Definition.IS_LOCAL) {
-						//delete local db
-						cnt = mDb.deleteRows(dataset.keyList);
-						log("Delete " + cnt + " rows");
-					}
-
-					showToast("업로드 완료 : " + cnt + "건");
-				}else {
-					showToast("업로드 실패 : " + res);
-				}
-				
-			}else {
-				log("No data to upload!");
-				showToast("업로드할 데이터 없음");
-			}
-		}
-		
-		mbRunning = false;
-	}
-	
-	public void showToast(final String msg) {
-		if(mHandler != null) {
-			mHandler.post(new Runnable() {
-				@Override
-				public void run() {
-					Toast.makeText(mContext, msg, Toast.LENGTH_SHORT).show();							
-				}
-			});
-		}
-	}
-
-	@Override
-	public String getTag() {
-		return "UploadThread";
-	}
-
-	@Override
-	public void log(String log) {
-		Log.d(getTag(), log);
-	}
+public class UploadThread extends Thread {
+    private static final int MSG_SHOW_TOAST = 0x01;
+    
+    private Context mContext = null;
+    
+    private static boolean mbRunning = false;
+    
+    
+    public UploadThread(Context context) {
+        mContext = context;
+    }
+    
+    private Handler mHandler = new Handler(Looper.getMainLooper()) {
+        public void handleMessage(Message msg) {
+            switch(msg.what) {
+            case MSG_SHOW_TOAST:
+                Toast.makeText(mContext, (String)msg.obj, Toast.LENGTH_SHORT).show();
+                break;
+            }
+        }
+    };
+    
+    @Override
+    public void run() {
+        synchronized(this) {
+            if(mbRunning) return;
+            
+            mbRunning = true;
+        }
+        
+        DbHelper mDb = new DbHelper(mContext);
+        
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        
+        //주유기록 먼저 업로드함
+        while(true) {
+            FuelRecord fuel = mDb.getUploadFuelRecord();
+            if(fuel == null) break;
+            
+            showToast("주유기록 " + fuel.seq + " 업로드");
+            
+            HashMap<String, String> uploadData = new HashMap<String, String>();
+            uploadData.put("inputVehicle", SettingActivity.sVin);
+            uploadData.put("inputOdo", String.valueOf(fuel.odo));
+            uploadData.put("inputPrice", String.valueOf(fuel.priceUnit));
+            uploadData.put("inputTotalPrice", String.valueOf(fuel.priceTotal));
+            uploadData.put("inputVolume", String.valueOf(fuel.liter));
+            uploadData.put("inputIsFull", fuel.isFull ? "Y" : "N");
+            uploadData.put("inputDate", sdf.format(fuel.timestamp));
+            uploadData.put("inputStation", fuel.location);
+            
+            int res = NetworkManager.getInstance().sendData(Definition.UPLOAD_FUEL, uploadData);
+            
+            showToast("주유기록 업로드 Result = " + res);
+            
+            if(res == 200) {
+                //성공
+                mDb.removeFuelRecord(fuel.seq);
+            }else {
+                //실패. 중지함.
+                break;
+            }
+        }
+        
+        
+        //로그기록 업로드
+        while(true) {
+            LogDataSet dataset = mDb.getUploadData();
+            if(dataset != null && dataset.getCount() > 0) {
+                showToast("로그 업로드 : " + dataset.getCount() + "건");
+                
+                int res = NetworkManager.getInstance().uploadLog(dataset);
+                
+                if(res == 200) {
+                    //성공
+                    showToast("업로드 성공, 데이터 삭제");
+                    
+                    mDb.deleteRows(dataset.keyList);
+                }else {
+                    //실패
+                    showToast("업로드 실패 = " + res);
+                }
+            }else {
+                showToast("업로드할 데이터 없음");
+                break;
+            }
+        }
+        
+        mbRunning = false;
+        
+        
+    }
+    
+    private void showToast(String msg) {
+        Message.obtain(mHandler, MSG_SHOW_TOAST, msg).sendToTarget();
+    }
 
 }

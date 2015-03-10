@@ -3,24 +3,18 @@ package kr.hyosang.drivediary.android;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import kr.hyosang.drivediary.android.network.UploadThread2;
 import kr.hyosang.drivediary.android.service.GpsService;
 import kr.hyosang.drivediary.android.service.IGpsService;
 import net.daum.mf.map.api.CameraUpdateFactory;
 import net.daum.mf.map.api.MapPoint;
 import net.daum.mf.map.api.MapPolyline;
 import net.daum.mf.map.api.MapView;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.location.Location;
-import android.net.NetworkInfo;
-import android.net.NetworkInfo.State;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -50,7 +44,7 @@ public class MainActivity extends BaseActivity {
 	private Button btnSetting;
 	private Button btnStartLog;
 	private Button btnStopLog;
-	private Button btnStopUploadLog;
+	private Button btnStopService;
 	private Button btnFuelNow;
 	private CheckBox chkTracking;
 	private EditText txtLatitude;
@@ -96,7 +90,7 @@ public class MainActivity extends BaseActivity {
 		btnFuelNow = (Button)findViewById(R.id.btn_addfuel);
 		btnStartLog = (Button)findViewById(R.id.btn_startlog);
 		btnStopLog = (Button)findViewById(R.id.btn_stoplog);
-		btnStopUploadLog = (Button)findViewById(R.id.btn_stopanduploadlog);
+		btnStopService = (Button)findViewById(R.id.btn_stopservice);
 		
 		chkTracking = (CheckBox)findViewById(R.id.chk_track_map);
 		
@@ -144,7 +138,7 @@ public class MainActivity extends BaseActivity {
 			}
 		});
 		btnStopLog.setOnClickListener(mStopButton);
-		btnStopUploadLog.setOnClickListener(mStopButton);
+		btnStopService.setOnClickListener(mStopButton);
 		
 		btnHideInfo.setOnClickListener(new OnClickListener() {
             @Override
@@ -180,12 +174,6 @@ public class MainActivity extends BaseActivity {
 		
 		boolean res = getApplicationContext().bindService(i, mServiceConn, Context.BIND_AUTO_CREATE);
 		
-		
-		//wifi listener
-		IntentFilter filter = new IntentFilter();
-		filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
-		registerReceiver(mReceiver, filter);
-		
 		log("App started");
 	}
 	
@@ -215,8 +203,9 @@ public class MainActivity extends BaseActivity {
 				try {
 					if(v.getId() == R.id.btn_stoplog) {
 						mService.stopLog();
-					}else if(v.getId() == R.id.btn_stopanduploadlog) {
-						mService.stopLogAndUpload();
+					}else if(v.getId() == R.id.btn_stopservice) {
+					    mService.stopLog();
+					    finish();
 					}
 				}catch(RemoteException e) {
 				}
@@ -226,11 +215,6 @@ public class MainActivity extends BaseActivity {
 	
 	@Override
 	protected void onDestroy() {
-	    try {
-	        unregisterReceiver(mReceiver);
-	    }catch(IllegalArgumentException e) {
-	    }
-	    
 	    try {
 	        unbindService(mServiceConn);
 	    }catch(IllegalArgumentException e) {
@@ -365,22 +349,4 @@ public class MainActivity extends BaseActivity {
 		}
 		return super.onMenuItemSelected(featureId, item);
 	}
-	
-	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if(WifiManager.NETWORK_STATE_CHANGED_ACTION.equals(intent.getAction())) {
-                NetworkInfo netInfo = (NetworkInfo) intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
-                
-                log("Network state = " + netInfo.getState());
-                
-                if(netInfo.getState() == State.CONNECTED) {
-                    //업로드 스레드 실행
-                    (new UploadThread2(MainActivity.this)).start();
-                }
-            }
-        }
-	};
-	
-
 }

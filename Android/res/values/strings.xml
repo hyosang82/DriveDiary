@@ -13,7 +13,7 @@
     
     <string name="start_log">기록 시작</string>
     <string name="stop_log">기록 중지</string>
-    <string name="stop_upload_log">기록 중지/업로드</string>
+    <string name="stop_service">서비스 종료</string>
     <string name="add_fuel">주유기록 추가</string>
     
     <string name="show_info">정보 보이기</string>

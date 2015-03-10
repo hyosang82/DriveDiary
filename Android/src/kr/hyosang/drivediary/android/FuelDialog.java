@@ -1,7 +1,7 @@
 package kr.hyosang.drivediary.android;
 
 import kr.hyosang.drivediary.android.database.DbHelper;
-import kr.hyosang.drivediary.android.network.UploadThread2;
+import kr.hyosang.drivediary.android.network.UploadThread;
 import android.app.Dialog;
 import android.content.Context;
 import android.net.wifi.WifiManager;
@@ -108,7 +108,7 @@ public class FuelDialog extends Dialog {
 			    WifiManager wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
 			    if(wifiManager.getConnectionInfo().getIpAddress() != 0) {
 			        //업로드 스레드 시작
-			        (new UploadThread2(mContext)).start();
+			        (new UploadThread(mContext)).start();
 			    }
 			    
 				dismiss();

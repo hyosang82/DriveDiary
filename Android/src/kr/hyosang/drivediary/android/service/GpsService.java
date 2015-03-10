@@ -18,9 +18,11 @@ import android.content.IntentFilter;
 import android.location.Location;
 import android.location.LocationManager;
 import android.location.LocationProvider;
+import android.net.NetworkInfo;
+import android.net.NetworkInfo.State;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
@@ -86,6 +88,7 @@ public class GpsService extends Service implements BaseUtil {
 		SettingActivity.loadPreferences(this);
 		
 		IntentFilter filter = new IntentFilter(Intent.ACTION_TIME_TICK);
+		filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
 		registerReceiver(mTickListener, filter);
 		
 		mNotiManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -152,17 +155,8 @@ public class GpsService extends Service implements BaseUtil {
 		setLogging(true);
 	}
 	
-	public void stopLog(boolean bUpload) {
+	public void stopLog() {
 		setLogging(false);
-		
-		if(bUpload) {
-			requestUpload();
-		}
-	}
-	
-	public void requestUpload() {
-	    //updateNotification(NotificationType.DATA_UPLOADING);
-		(new UploadThread(this)).setLooper(Looper.getMainLooper()).start();
 	}
 	
 	private synchronized void insertLog(Location loc) {
@@ -199,19 +193,30 @@ public class GpsService extends Service implements BaseUtil {
 	private BroadcastReceiver mTickListener = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			mUploadTick++;
-			mStopTickTimer--;
-			
-			if(mStopTickTimer < 0) {
-				//기록 중지 및 업로드
-				stopLog(true);
-				sleep();
-			}else if(mUploadTick > SettingActivity.sIntervalUpload) {
-				//업로드 처리
-				mUploadTick = mUploadTick % SettingActivity.sIntervalUpload;
-				
-				requestUpload();
-			}
+		    String action = intent.getAction();
+		    
+		    if(Intent.ACTION_TIME_TICK.equals(action)) {
+    			mUploadTick++;
+    			mStopTickTimer--;
+    			
+    			if(mStopTickTimer < 0) {
+    				//기록 중지 및 업로드
+    				stopLog();
+    				sleep();
+    			}else if(mUploadTick > SettingActivity.sIntervalUpload) {
+    				//업로드 처리
+    				mUploadTick = mUploadTick % SettingActivity.sIntervalUpload;
+    			}
+		    }else if(WifiManager.NETWORK_STATE_CHANGED_ACTION.equals(action)) {
+                NetworkInfo netInfo = (NetworkInfo) intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+                
+                log("Network state = " + netInfo.getState());
+                
+                if(netInfo.getState() == State.CONNECTED) {
+                    //업로드 스레드 실행
+                    (new UploadThread(GpsService.this)).start();
+                }
+		    }
 		}
 	};
 	
@@ -240,6 +245,10 @@ public class GpsService extends Service implements BaseUtil {
 			log("LocationService Disconnected");
 		}
 	};
+	
+	private void requestUpload() {
+	    (new UploadThread(this)).start();
+	}
 	
 	private void sleep() {
 	    //앱 종료함
@@ -428,12 +437,7 @@ public class GpsService extends Service implements BaseUtil {
 
 		@Override
 		public void stopLog() throws RemoteException {
-			GpsService.this.stopLog(false);			
-		}
-
-		@Override
-		public void stopLogAndUpload() throws RemoteException {
-			GpsService.this.stopLog(true);
+			GpsService.this.stopLog();			
 		}
 
 		@Override
