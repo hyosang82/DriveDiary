@@ -17,9 +17,13 @@ import android.widget.Toast;
 public class UploadThread extends Thread {
     private static final int MSG_SHOW_TOAST = 0x01;
     
+    private static final int MINIMALUPLOAD_INTERVAL = 20 * 60 * 1000;
+    
     private Context mContext = null;
     
     private static boolean mbRunning = false;
+    
+    private static long mLastUploadTime = 0;
     
     
     public UploadThread(Context context) {
@@ -80,25 +84,30 @@ public class UploadThread extends Thread {
         
         
         //로그기록 업로드
-        while(true) {
-            LogDataSet dataset = mDb.getUploadData();
-            if(dataset != null && dataset.getCount() > 0) {
-                showToast("로그 업로드 : " + dataset.getCount() + "건");
-                
-                int res = NetworkManager.getInstance().uploadLog(dataset);
-                
-                if(res == 200) {
-                    //성공
-                    showToast("업로드 성공, 데이터 삭제");
+        if((System.currentTimeMillis() - mLastUploadTime) > MINIMALUPLOAD_INTERVAL) {
+            //로그 조각화 방지
+            while(true) {
+                LogDataSet dataset = mDb.getUploadData();
+                if(dataset != null && dataset.getCount() > 0) {
+                    showToast("로그 업로드 : " + dataset.getCount() + "건");
                     
-                    mDb.deleteRows(dataset.keyList);
+                    int res = NetworkManager.getInstance().uploadLog(dataset);
+                    
+                    if(res == 200) {
+                        //성공
+                        showToast("업로드 성공, 데이터 삭제");
+                        
+                        mDb.deleteRows(dataset.keyList);
+                        
+                        mLastUploadTime = System.currentTimeMillis();
+                    }else {
+                        //실패
+                        showToast("업로드 실패 = " + res);
+                    }
                 }else {
-                    //실패
-                    showToast("업로드 실패 = " + res);
+                    showToast("업로드할 데이터 없음");
+                    break;
                 }
-            }else {
-                showToast("업로드할 데이터 없음");
-                break;
             }
         }
         
