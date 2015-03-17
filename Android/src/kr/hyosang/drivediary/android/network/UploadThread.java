@@ -103,6 +103,7 @@ public class UploadThread extends Thread {
                     }else {
                         //실패
                         showToast("업로드 실패 = " + res);
+                        break;
                     }
                 }else {
                     showToast("업로드할 데이터 없음");
